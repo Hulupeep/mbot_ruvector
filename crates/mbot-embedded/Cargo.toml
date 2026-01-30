@@ -1,0 +1,17 @@
+[package]
+name = "mbot-embedded"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Embedded RuVector for ESP32/CyberPi (no_std)"
+
+[features]
+default = []
+
+[dependencies]
+mbot-core = { path = "../mbot-core", default-features = false, features = ["no_std"] }
+
+# Note: For actual ESP32 deployment, add:
+# esp-idf-hal = "0.43"
+# esp-idf-sys = "0.34"
+# embedded-hal = "1.0"

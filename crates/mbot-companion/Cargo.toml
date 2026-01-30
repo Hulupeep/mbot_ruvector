@@ -1,0 +1,45 @@
+[package]
+name = "mbot-companion"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Laptop companion app for mBot2 - connects via Bluetooth/Serial"
+
+[[bin]]
+name = "mbot-companion"
+path = "src/main.rs"
+
+[[bin]]
+name = "mbot-tictactoe"
+path = "src/bin/tictactoe.rs"
+
+[[bin]]
+name = "mbot-draw"
+path = "src/bin/draw.rs"
+
+[features]
+default = []  # No system dependencies by default
+bluetooth = ["btleplug"]  # Requires libdbus-1-dev
+serial = ["serialport"]   # Requires libudev-dev
+
+[dependencies]
+mbot-core = { path = "../mbot-core" }
+
+# Async
+tokio.workspace = true
+
+# Bluetooth (optional - requires system libs: libdbus-1-dev on Ubuntu)
+btleplug = { workspace = true, optional = true }
+
+# Serial (optional - usually works out of the box)
+serialport = { workspace = true, optional = true }
+
+# Utilities
+rand.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }

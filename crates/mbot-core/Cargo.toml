@@ -1,0 +1,15 @@
+[package]
+name = "mbot-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core AI logic for mBot2 with RuVector nervous system"
+
+[features]
+default = ["std"]
+std = []
+no_std = ["libm"]
+
+[dependencies]
+# Math functions for no_std
+libm = { version = "0.2", optional = true }

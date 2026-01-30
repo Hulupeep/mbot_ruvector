@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 mBot2 RuVector Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a1a;
+            --bg-panel: #12122a;
+            --border: #2a2a4a;
+            --text: #e0e0ff;
+            --text-dim: #8080a0;
+            --accent: #00ff88;
+            --calm: #00aaff;
+            --active: #00ff88;
+            --spike: #ffaa00;
+            --protect: #ff4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .panel h2 {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mode-display {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .mode-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .mode-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .mode-Calm { color: var(--calm); }
+        .mode-Active { color: var(--active); }
+        .mode-Spike { color: var(--spike); }
+        .mode-Protect { color: var(--protect); animation: shake 0.1s infinite; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+        }
+
+        .meter {
+            margin-bottom: 15px;
+        }
+
+        .meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .meter-bar {
+            height: 24px;
+            background: var(--bg-dark);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            border-radius: 12px;
+            transition: width 0.1s ease, background 0.3s ease;
+            position: relative;
+        }
+
+        .meter-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .tension-fill { background: linear-gradient(90deg, var(--calm), var(--active), var(--spike), var(--protect)); }
+        .coherence-fill { background: linear-gradient(90deg, var(--protect), var(--spike), var(--active), var(--calm)); }
+        .energy-fill { background: linear-gradient(90deg, var(--protect), var(--spike), var(--accent)); }
+        .curiosity-fill { background: var(--accent); }
+        .distance-fill { background: var(--calm); }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .sensor {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+        }
+
+        .sensor-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .sensor-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .sensor-label {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+
+        .status-dot.connected { background: var(--accent); }
+        .status-dot.disconnected { background: var(--protect); animation: none; }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .robot-viz {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            position: relative;
+        }
+
+        .robot-body {
+            width: 100px;
+            height: 80px;
+            background: var(--bg-dark);
+            border: 3px solid var(--border);
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .robot-eye {
+            width: 20px;
+            height: 20px;
+            background: var(--calm);
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            transition: background 0.3s;
+        }
+
+        .robot-eye.left { left: 20px; }
+        .robot-eye.right { right: 20px; }
+
+        .robot-wheel {
+            width: 15px;
+            height: 40px;
+            background: var(--text-dim);
+            border-radius: 5px;
+            position: absolute;
+            bottom: -10px;
+        }
+
+        .robot-wheel.left { left: -10px; }
+        .robot-wheel.right { right: -10px; }
+
+        .robot-pen {
+            width: 8px;
+            height: 30px;
+            background: linear-gradient(to bottom, #666, #222);
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px 2px 4px 4px;
+            transition: height 0.2s;
+        }
+
+        .robot-pen.up { height: 20px; bottom: -25px; }
+
+        .distance-ring {
+            position: absolute;
+            border: 2px dashed var(--calm);
+            border-radius: 50%;
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 mBot2 RuVector Neural Dashboard</h1>
+
+    <div class="dashboard">
+        <!-- Mode Display -->
+        <div class="panel mode-display">
+            <h2>Reflex Mode</h2>
+            <div class="mode-icon" id="mode-icon">😌</div>
+            <div class="mode-name mode-Calm" id="mode-name">Calm</div>
+            <div class="mode-desc" id="mode-desc">Wandering peacefully</div>
+        </div>
+
+        <!-- Robot Visualization -->
+        <div class="panel">
+            <h2>Robot State</h2>
+            <div class="robot-viz" id="robot-viz">
+                <div class="distance-ring" id="distance-ring" style="width: 180px; height: 180px;"></div>
+                <div class="robot-body">
+                    <div class="robot-eye left" id="eye-left"></div>
+                    <div class="robot-eye right" id="eye-right"></div>
+                    <div class="robot-wheel left"></div>
+                    <div class="robot-wheel right"></div>
+                    <div class="robot-pen" id="robot-pen"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Homeostasis Meters -->
+        <div class="panel">
+            <h2>Homeostasis</h2>
+
+            <div class="meter">
+                <div class="meter-label">
+                    <span>Tension</span>
+                    <span id="tension-value">0.00</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill tension-fill" id="tension-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="meter">
+                <div class="meter-label">
+                    <span>Coherence</span>
+                    <span id="coherence-value">1.00</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill coherence-fill" id="coherence-bar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="meter">
+                <div class="meter-label">
+                    <span>Energy</span>
+                    <span id="energy-value">1.00</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill energy-fill" id="energy-bar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="meter">
+                <div class="meter-label">
+                    <span>Curiosity</span>
+                    <span id="curiosity-value">0.50</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill curiosity-fill" id="curiosity-bar" style="width: 50%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensors -->
+        <div class="panel">
+            <h2>Sensors</h2>
+            <div class="sensor-grid">
+                <div class="sensor">
+                    <div class="sensor-icon">📏</div>
+                    <div class="sensor-value" id="distance-value">--</div>
+                    <div class="sensor-label">Distance (cm)</div>
+                </div>
+                <div class="sensor">
+                    <div class="sensor-icon">🌀</div>
+                    <div class="sensor-value" id="gyro-value">--</div>
+                    <div class="sensor-label">Gyro (°/s)</div>
+                </div>
+                <div class="sensor">
+                    <div class="sensor-icon">🔊</div>
+                    <div class="sensor-value" id="sound-value">--</div>
+                    <div class="sensor-label">Sound</div>
+                </div>
+                <div class="sensor">
+                    <div class="sensor-icon">💡</div>
+                    <div class="sensor-value" id="light-value">--</div>
+                    <div class="sensor-label">Light</div>
+                </div>
+            </div>
+
+            <div class="meter" style="margin-top: 20px;">
+                <div class="meter-label">
+                    <span>Distance</span>
+                    <span id="distance-bar-value">-- cm</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill distance-fill" id="distance-bar" style="width: 50%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div>
+            <span class="status-dot disconnected" id="status-dot"></span>
+            <span id="status-text">Connecting...</span>
+        </div>
+        <div>Tick: <span id="tick-value">0</span></div>
+        <div>Encoders: L=<span id="enc-left">0</span> R=<span id="enc-right">0</span></div>
+    </div>
+
+    <script>
+        const modeIcons = {
+            Calm: '😌',
+            Active: '🔍',
+            Spike: '⚡',
+            Protect: '🛡️'
+        };
+
+        const modeDescs = {
+            Calm: 'Wandering peacefully',
+            Active: 'Exploring with interest',
+            Spike: 'Excited response!',
+            Protect: 'Backing away from danger!'
+        };
+
+        const modeColors = {
+            Calm: '#00aaff',
+            Active: '#00ff88',
+            Spike: '#ffaa00',
+            Protect: '#ff4444'
+        };
+
+        let ws;
+        let reconnectInterval;
+
+        function connect() {
+            ws = new WebSocket('ws://localhost:8081');
+
+            ws.onopen = () => {
+                document.getElementById('status-dot').className = 'status-dot connected';
+                document.getElementById('status-text').textContent = 'Connected';
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('status-dot').className = 'status-dot disconnected';
+                document.getElementById('status-text').textContent = 'Disconnected - Reconnecting...';
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(connect, 2000);
+                }
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateDashboard(data);
+            };
+        }
+
+        function updateDashboard(data) {
+            // Mode
+            const mode = data.mode;
+            document.getElementById('mode-icon').textContent = modeIcons[mode];
+            document.getElementById('mode-name').textContent = mode;
+            document.getElementById('mode-name').className = `mode-name mode-${mode}`;
+            document.getElementById('mode-desc').textContent = modeDescs[mode];
+
+            // Meters
+            document.getElementById('tension-value').textContent = data.tension.toFixed(2);
+            document.getElementById('tension-bar').style.width = `${data.tension * 100}%`;
+
+            document.getElementById('coherence-value').textContent = data.coherence.toFixed(2);
+            document.getElementById('coherence-bar').style.width = `${data.coherence * 100}%`;
+
+            document.getElementById('energy-value').textContent = data.energy.toFixed(2);
+            document.getElementById('energy-bar').style.width = `${data.energy * 100}%`;
+
+            document.getElementById('curiosity-value').textContent = data.curiosity.toFixed(2);
+            document.getElementById('curiosity-bar').style.width = `${data.curiosity * 100}%`;
+
+            // Sensors
+            document.getElementById('distance-value').textContent = data.distance.toFixed(1);
+            document.getElementById('gyro-value').textContent = data.gyro.toFixed(1);
+            document.getElementById('sound-value').textContent = data.sound.toFixed(2);
+            document.getElementById('light-value').textContent = data.light.toFixed(2);
+
+            document.getElementById('distance-bar-value').textContent = `${data.distance.toFixed(1)} cm`;
+            document.getElementById('distance-bar').style.width = `${Math.min(100, data.distance)}%`;
+
+            // Status
+            document.getElementById('tick-value').textContent = data.tick;
+            document.getElementById('enc-left').textContent = data.encoderLeft;
+            document.getElementById('enc-right').textContent = data.encoderRight;
+
+            // Robot visualization
+            const eyeColor = modeColors[mode];
+            document.getElementById('eye-left').style.background = eyeColor;
+            document.getElementById('eye-right').style.background = eyeColor;
+
+            // Distance ring
+            const ringSize = Math.min(200, Math.max(50, data.distance * 2));
+            const ring = document.getElementById('distance-ring');
+            ring.style.width = `${ringSize}px`;
+            ring.style.height = `${ringSize}px`;
+            ring.style.borderColor = modeColors[mode];
+            ring.style.opacity = data.distance < 30 ? 0.8 : 0.3;
+        }
+
+        // Start connection
+        connect();
+    </script>
+</body>
+</html>
