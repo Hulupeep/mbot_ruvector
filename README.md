@@ -8,6 +8,9 @@
 
 ---
 
+<img width="718" height="676" alt="image" src="https://github.com/user-attachments/assets/6093ccbc-df03-41b6-9d3d-720fc543f1b1" />
+
+
 ## What If Your Robot Could *Feel*?
 
 Not fake feelings. Not scripted responses. Real emergent emotions that arise from how it experiences the world.
